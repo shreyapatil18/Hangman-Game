@@ -1,0 +1,13 @@
+# ui_helper.py
+from tkinter import Label
+
+def create_hangman_label(root):
+    hangman_label = Label(
+        root,
+        text="WELCOME TO HANGMAN GAME",
+        font=("CourierK", 20),
+        foreground="black",
+        bg="lightgray"
+    )
+    hangman_label.pack()
+    return hangman_label
