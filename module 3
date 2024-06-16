@@ -1,0 +1,5 @@
+# background_module.py
+
+def set_background_color(window, color):
+
+    window.configure(bg=color)
