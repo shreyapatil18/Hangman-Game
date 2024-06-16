@@ -1,0 +1,13 @@
+# ui_elements.py
+from tkinter import Label
+
+def create_topic_label(root):
+    topic_label = Label(
+        root,
+        text="choose a topic:",
+        font=("CourierK", 16),
+        foreground="blue",
+        bg="lightgray"
+    )
+    topic_label.pack()
+    return topic_label
