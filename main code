@@ -1,0 +1,171 @@
+from tkinter import *
+import tkinter as tk
+
+from tkinter import messagebox
+import random
+
+from datetime import date
+import time
+from tkinter import ttk
+from background_module import set_background_color
+from ui_helper import create_hangman_label
+from ui_elements import create_topic_label
+
+class HangmanGame:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Hangman Game")
+        self.root.geometry("400x300")
+
+        set_background_color(self.root, "lightgray")
+
+        self.style = ttk.Style()
+        self.style.configure("TButton", foreground="blue", font=("Arial", 12))
+
+        create_hangman_label(root)
+        create_topic_label(root)
+
+
+        self.topics = ["CITIES", "COLORS", "METALS", "INSTRUMENTS"]
+        self.words_by_topic = {
+            "CITIES": ["PUNE", "SURAT", "PATNA", "KOCHIN", "DELHI"],
+            "COLORS": ["RED", "BLUE", "GREEN", "YELLOW", "ORANGE"],
+            "METALS": ["GOLD", "SILVER", "COPPER", "PLATINUM", "IRON"],
+            "INSTRUMENTS": ["PIANO", "GUITAR", "VIOLIN", "FLUTE", "DRUMS"]
+        }
+
+        self.selected_topic = StringVar()
+        self.selected_topic.set("CITIES")
+
+        self.create_widgets()
+
+        def rules():
+            messagebox.showinfo("RULES", "HOW TO PLAY HANGMAN\n"
+                                         "\n"
+                                         "1. Select a topic from the given set of topics.\n"
+                                         "2. One unknown word will get randomly generated which we have to guess using any of the alphabets.\n"
+                                         "3. 6 chances will be given to guess the word.\n"
+                                         "4. For every correct letter, the letter will go sit in its respective place in the blank.\n"
+                                         "5. For every wrong letter, elements of the hangman will appear.\n"
+                                         "\n"
+                                         "GOOD LUCK!!")
+
+        tk.Button(root, text='RULES', command=rules,fg="blue",width=5).pack()
+
+        x = str(date.today())
+        datetime_label = tk.Label(root, text=x, font=("Arial", 15),bg="lightgray")
+        datetime_label.pack(side=BOTTOM, anchor=SE)
+
+        y = str(time.strftime("%H:%M:%S"))
+        datetime_label = tk.Label(root, text=y, font=("Arial", 15),bg="lightgray")
+        datetime_label.pack(side=BOTTOM, anchor=SE)
+
+        #pygame.mixer.init()
+        #pygame.mixer.music.load(r"C:\Users\shrey\Downloads\WhatsApp Audio 2023-12-09 at 4.54.24 PM.mpeg")
+        #pygame.mixer.music.play(-1)
+
+        #self.mute_button = Button(root, text="Mute", command=self.toggle_mute)
+        #self.mute_button.pack(side=BOTTOM,anchor=NE)
+
+        ''' def toggle_mute(self):
+        if pygame.mixer.music.get_volume() == 0.0:
+            pygame.mixer.music.set_volume(1.0)
+            self.mute_button.config(text="Mute")
+        else:
+            pygame.mixer.music.set_volume(0.0)
+            self.mute_button.config(text="Unmute") '''
+
+    def create_widgets(self):
+
+        self.option_menu = ttk.OptionMenu(self.root, self.selected_topic, *self.topics)
+        self.option_menu.pack(pady=10)
+
+        Button(self.root, text="START GAME",fg="blue", command=self.start_game, width=10).pack(pady=10)
+
+    def start_game(self):
+        selected_topic = self.selected_topic.get()
+        word = random.choice(self.words_by_topic[selected_topic])
+        HangmanGameWindow(self.root, word)
+
+
+class HangmanGameWindow:
+    def __init__(self, root, word):
+        self.root = root
+        self.word = word.upper()
+        self.word_with_blanks = '_' * len(word)
+        self.mistakes = 0
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.hangman_label = Label(self.root, text="", font=("Courier", 16))
+        self.hangman_label.pack()
+
+        Label(self.root, text=self.word_with_blanks, font=("Arial", 24)).pack(pady=10)
+
+        Label(self.root, text="Enter a Letter:").pack()
+
+        self.guess_entry = Entry(self.root, width=3, font=("Arial", 24))
+        self.guess_entry.pack(pady=10)
+
+        Button(self.root, text="GUESS", command=self.check_guess,fg="blue").pack(pady=10)
+
+        self.result_label = Label(self.root, font=("Arial", 24))
+        self.result_label.pack()
+
+        self.update_hangman()
+
+    def update_hangman(self):
+        hangman_art = [
+            "   +---+\n   |   |\n       |\n       |\n       |\n       |\n=========",
+            "   +---+\n   |   |\n   O   |\n       |\n       |\n       |\n=========",
+            "   +---+\n   |   |\n   O   |\n   |   |\n       |\n       |\n=========",
+            "   +---+\n   |   |\n   O   |\n  /|   |\n       |\n       |\n=========",
+            "   +---+\n   |   |\n   O   |\n  /|\\  |\n       |\n       |\n=========",
+            "   +---+\n   |   |\n   O   |\n  /|\\  |\n  /    |\n       |\n=========",
+            "   +---+\n   |   |\n   O   |\n  /|\\  |\n  / \\  |\n       |\n========="
+        ]
+        self.hangman_label.config(text=hangman_art[self.mistakes])
+
+    def check_guess(self):
+        guess = self.guess_entry.get().upper()
+        if guess.isalpha() and len(guess) == 1:
+            if guess in self.word:
+                for i in range(len(self.word)):
+                    if self.word[i] == guess:
+                        self.word_with_blanks = self.word_with_blanks[:i] + guess + self.word_with_blanks[i + 1:]
+                self.update_display()
+                if '_' not in self.word_with_blanks:
+                    self.end_game("WIN")
+            else:
+                self.mistakes += 1
+                self.update_hangman()
+                if self.mistakes == 6:
+                    self.end_game("LOSE")
+
+    def update_display(self):
+        self.result_label.config(text="")
+        self.guess_entry.delete(0, END)
+        word_label = Label(self.root, text=self.word_with_blanks, font=("Arial", 24))
+        word_label.pack(pady=100)
+        word_label.place(x=160, y=550)
+
+    def end_game(self, result):
+        if result == "WIN":
+            result_text = "YOU WIN"
+        else:
+            result_text = "YOU LOSE, THE WORD WAS" + " " + self.word.upper()
+        self.result_label.config(text=result_text)
+        self.guess_entry.config(state="disabled")
+        Button(self.root, text="Play Again", command=self.play_again).pack(pady=10)
+
+    def play_again(self):
+        self.root.destroy()
+        root = Tk()
+        hangman_game= HangmanGame(root)
+        root.mainloop()
+
+if __name__ == "__main__":
+    root = Tk()
+    hangman_game = HangmanGame(root)
+    root.mainloop()
